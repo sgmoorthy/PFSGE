@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pfsge"
+version = "0.1.0"
+description = "Pulsed-Field Spiral Gel Electrophoresis (PFSGE) framework"
+readme = "README.md"
+authors = [{ name = "PFSGE Researchers" }]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "scipy",
+    "pillow"
+]
+
+[project.urls]
+Homepage = "https://github.com/sgmoorthy/PFSGE"
+
+[tool.setuptools.packages.find]
+include = ["pfsge*"]

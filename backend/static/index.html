@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PFSGE Research Platform</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <!-- Load Chart.js and standard Google font -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">PFSGE Suite</div>
+            <p>Computational & Analytical Platform for Pulsed-Field Spiral Gel Electrophoresis</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('interpret')">Image Interpreter</button>
+            <button class="tab-btn" onclick="switchTab('simulate')">Simulation Engine</button>
+            <button class="tab-btn" onclick="switchTab('dispenser')">Dispenser Calculator</button>
+        </div>
+
+        <!-- Interpret Tab -->
+        <div id="interpret-tab" class="tab-content active">
+            <div class="grid-layout">
+                <div class="card">
+                    <h2>Gel Image Upload</h2>
+                    <p class="subtitle">Drag & drop your spiral gel scan or select a file to begin radial density profiling.</p>
+                    <div class="upload-zone" id="drop-zone">
+                        <p>Drag and drop image here or click to browse</p>
+                        <input type="file" id="file-input" accept="image/*" hidden>
+                        <button class="btn btn-primary" id="browse-btn">Select Gel Image</button>
+                    </div>
+                    <div id="canvas-container" class="canvas-container" style="display:none; margin-top: 1.5rem; text-align: center; position: relative;">
+                        <p class="instruction">Drag the <span style="color:#ef4444; font-weight:bold;">red crosshair</span> to define the exact center of the spiral gel:</p>
+                        <canvas id="gel-canvas" style="max-width: 100%; border: 1px solid #475569; border-radius: 0.5rem; cursor: move;"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" id="interpret-results" style="opacity: 0.5; pointer-events: none;">
+                    <h2>Radial Electropherogram</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="interpretChart"></canvas>
+                    </div>
+                    <div class="stats-panel" id="interpret-stats">
+                        <div class="stat-card">
+                            <h3>Detected Bands (Peaks)</h3>
+                            <p id="interpret-peaks-count">-</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Radial Variance (σ²)</h3>
+                            <p id="interpret-variance">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulate Tab -->
+        <div id="simulate-tab" class="tab-content">
+            <div class="grid-layout">
+                <div class="card">
+                    <h2>Simulation Settings</h2>
+                    <form id="sim-form" onsubmit="runSimulation(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="n_particles">Particles</label>
+                                <input type="number" id="n_particles" value="200" min="10" max="1000">
+                            </div>
+                            <div class="form-group">
+                                <label for="n_steps">Time Steps</label>
+                                <input type="number" id="n_steps" value="1000" min="100" max="5000">
+                            </div>
+                            <div class="form-group">
+                                <label for="dt">Time Step dt (s)</label>
+                                <input type="number" id="dt" value="0.05" step="0.01" min="0.001">
+                            </div>
+                            <div class="form-group">
+                                <label for="field_magnitude">Field Magnitude</label>
+                                <input type="number" id="field_magnitude" value="2.0" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="field_frequency">Field Freq (rad/s)</label>
+                                <input type="number" id="field_frequency" value="0.5" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="zeta_0">Base Drag (ζ₀)</label>
+                                <input type="number" id="zeta_0" value="1.0" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="alpha">Drag Gradient (α)</label>
+                                <input type="number" id="alpha" value="0.02" step="0.001">
+                            </div>
+                            <div class="form-group">
+                                <label for="noise_strength">Noise Strength</label>
+                                <input type="number" id="noise_strength" value="0.2" step="0.05">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top:1.5rem;">Execute in silico Electrophoresis</button>
+                    </form>
+                </div>
+
+                <div class="card" id="simulate-results" style="opacity: 0.5; pointer-events: none;">
+                    <h2>Virtual Electropherogram</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="simChart"></canvas>
+                    </div>
+                    <div class="stats-panel" id="sim-stats">
+                        <div class="stat-card">
+                            <h3>Bands Resolved</h3>
+                            <p id="sim-peaks-count">-</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Distribution Variance</h3>
+                            <p id="sim-variance">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dispenser Tab -->
+        <div id="dispenser-tab" class="tab-content">
+            <div class="grid-layout">
+                <div class="card">
+                    <h2>Dispenser Settings</h2>
+                    <form id="dispenser-form" onsubmit="calculateDispenser(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="target_alpha">Target Alpha (α)</label>
+                                <input type="number" id="target_alpha" value="0.05" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="r_min">Inner Radius (mm)</label>
+                                <input type="number" id="r_min" value="10" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="r_max">Outer Radius (mm)</label>
+                                <input type="number" id="r_max" value="60" min="10">
+                            </div>
+                            <div class="form-group">
+                                <label for="base_concentration">Base Conc (%)</label>
+                                <input type="number" id="base_concentration" value="1.0" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="max_concentration">Max Conc (%)</label>
+                                <input type="number" id="max_concentration" value="4.0" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="bead_width">Bead Width (mm)</label>
+                                <input type="number" id="bead_width" value="1.5" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="linear_velocity">Stage velocity (mm/s)</label>
+                                <input type="number" id="linear_velocity" value="15.0" step="1.0">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top:1.5rem;">Calculate Print Parameters</button>
+                    </form>
+                </div>
+
+                <div class="card" id="dispenser-results" style="opacity: 0.5; pointer-events: none;">
+                    <h2>Dispenser Profile Output</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="dispenserChart"></canvas>
+                    </div>
+                    <div class="stats-panel" style="grid-template-columns: 1fr;">
+                        <div class="stat-card">
+                            <h3>Key Parameters</h3>
+                            <p id="dispenser-summary" style="font-size:0.95rem; font-weight:normal; color:#cbd5e1; line-height: 1.5;"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="/static/app.js"></script>
+</body>
+</html>
