@@ -22,7 +22,9 @@ Unlike traditional Pulsed-Field Gel Electrophoresis (PFGE) which relies on homog
 ### 1. Radial Drag (Porosity) Gradient
 The gel structure is cast with a radial polymer concentration gradient. The effective drag coefficient $\zeta(r)$ experienced by a DNA fragment at a radial distance $r$ from the center is modeled as:
 
-$$\zeta(r) = \zeta_0 (1 + \alpha r^2)$$
+$$
+\zeta(r) = \zeta_0 (1 + \alpha r^2)
+$$
 
 Where:
 * $\zeta_0$: Base drag coefficient at the origin ($r = 0$).
@@ -32,23 +34,33 @@ Where:
 ### 2. Particle Dynamics (Equation of Motion)
 The motion of each DNA segment is governed by an overdamped Langevin equation:
 
-$$\frac{d\mathbf{x}}{dt} = \frac{q \mathbf{E}(t)}{\zeta(r)} + \boldsymbol{\eta}(t)$$
+$$
+\frac{d\mathbf{x}}{dt} = \frac{q \mathbf{E}(t)}{\zeta(r)} + \boldsymbol{\eta}(t)
+$$
 
 Where:
 * $\mathbf{x} = (x, y)$ is the 2D coordinate of the DNA segment.
 * $q$ is the effective charge of the DNA fragment.
 * $\mathbf{E}(t) = \big(E_{\text{mag}}\cos(\omega t), E_{\text{mag}}\sin(\omega t)\big)$ is the rotating electric field vector with frequency $\omega$.
 * $\boldsymbol{\eta}(t)$ represents Brownian thermal noise with properties:
-  $$\langle \eta_i(t) \rangle = 0, \quad \langle \eta_i(t)\eta_j(t') \rangle = \frac{2 D_0}{\zeta(r)} \delta_{ij}\delta(t-t')$$
+
+$$
+\langle \eta_i(t) \rangle = 0, \quad \langle \eta_i(t)\eta_j(t') \rangle = \frac{2 D_0}{\zeta(r)} \delta_{ij}\delta(t-t')
+$$
 
 ### 3. Spiral Dispensing Mechanics
 To cast the gel, an automated deposition tool dispenses a polymer bead of width $w$ along an Archimedean spiral:
 
-$$r(\theta) = r_{\text{inner}} + \frac{w}{2\pi} \theta$$
+$$
+r(\theta) = r_{\text{inner}} + \frac{w}{2\pi} \theta
+$$
 
 To ensure uniform deposition density under a variable concentration profile $C(r)$, the system regulates:
 * **Stage Rotation Speed** (to maintain constant linear velocity $v_{\text{linear}}$):
-  $$\omega_{\text{stage}}(r) = \frac{v_{\text{linear}}}{r}$$
+
+$$
+\omega_{\text{stage}}(r) = \frac{v_{\text{linear}}}{r}
+$$
 
 ---
 
@@ -66,7 +78,7 @@ The technology, mathematical physical modeling, structural apparatus design, and
 
 ## 📚 Citation
 
-If you use this simulation framework, apparatus geometry, or theoretical model in your research, please cite the published patent application and forthcoming paper as follows:
+If you use this simulation framework, apparatus geometry, or theoretical model in your research, please cite the published patent application as follows:
 
 ```bibtex
 @patent{swaminathan2026pfsge,
