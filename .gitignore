@@ -4,3 +4,4 @@ __pycache__/
 pfsge.egg-info/
 .ipynb_checkpoints/
 .pytest_cache/
+.vercel

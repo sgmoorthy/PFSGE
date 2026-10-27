@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "pfsge",
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/analyze-image", "destination": "/api/analyze-image.js" },
+    { "source": "/api/simulate", "destination": "/api/simulate.js" },
+    { "source": "/api/dispenser", "destination": "/api/dispenser.js" }
+  ]
+}
