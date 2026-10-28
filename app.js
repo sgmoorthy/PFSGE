@@ -125,6 +125,18 @@ function handleImageFile(file) {
     alert('Please upload a valid image file (PNG, JPG, TIFF, WebP).');
     return;
   }
+  // Clear benchmark card highlights
+  document.querySelectorAll('.benchmark-card').forEach(c => c.classList.remove('active'));
+  const btnWell = document.getElementById('btn-well-align');
+  if (btnWell) btnWell.style.display = 'none';
+
+  const banner = document.getElementById('active-benchmark-banner');
+  if (banner) {
+    banner.style.display = 'flex';
+    document.getElementById('active-benchmark-text').innerHTML = `Custom Uploaded Scan: <strong>${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)`;
+    document.getElementById('active-benchmark-status').textContent = 'Loaded';
+  }
+
   const reader = new FileReader();
   reader.onload = (e) => {
     const img = new Image();
@@ -141,37 +153,170 @@ function handleImageFile(file) {
   reader.readAsDataURL(file);
 }
 
-// Generate Benchmark Synthetic Spiral Gel
-function loadBenchmarkGel() {
-  const size = 420;
+// Benchmark Presets Configuration
+const BENCHMARK_SAMPLES = {
+  yeast_3band: {
+    id: 'yeast_3band',
+    title: 'Standard 3-Band Ladder (Yeast Chromosomes)',
+    specs: '10 Mb, 5 Mb, 1 Mb • High SNR Reference',
+    url: 'sample_gels/benchmark_yeast_standard_3band.png',
+    filename: 'pfsge_yeast_standard_3band.png',
+    center: { x: 256, y: 256 },
+    threshold: 15,
+    smooth: 2.0,
+    bands: [
+      { r: 62, width: 4.5, intensity: 225 },
+      { r: 125, width: 6.0, intensity: 210 },
+      { r: 188, width: 7.5, intensity: 185 }
+    ]
+  },
+  megabase_6band: {
+    id: 'megabase_6band',
+    title: 'Megabase 6-Band Spectrum',
+    specs: '12 to 0.7 Mb • High-Density Resolving Power',
+    url: 'sample_gels/benchmark_megabase_ladder_6band.png',
+    filename: 'pfsge_megabase_ladder_6band.png',
+    center: { x: 256, y: 256 },
+    threshold: 15,
+    smooth: 1.5,
+    bands: [
+      { r: 46, width: 3.5, intensity: 230 },
+      { r: 80, width: 4.0, intensity: 218 },
+      { r: 114, width: 4.6, intensity: 205 },
+      { r: 148, width: 5.2, intensity: 195 },
+      { r: 182, width: 5.8, intensity: 180 },
+      { r: 216, width: 6.5, intensity: 165 }
+    ]
+  },
+  fluor_noisy: {
+    id: 'fluor_noisy',
+    title: 'High-Background Fluorometric Scan',
+    specs: 'Autofluorescence Flare & Optical Haze (SNR ~12 dB)',
+    url: 'sample_gels/benchmark_high_noise_fluorescence.png',
+    filename: 'pfsge_high_noise_fluorescence.png',
+    center: { x: 256, y: 256 },
+    threshold: 38,
+    smooth: 2.5,
+    bands: [
+      { r: 55, width: 5.5, intensity: 165 },
+      { r: 105, width: 7.0, intensity: 150 },
+      { r: 156, width: 8.5, intensity: 135 },
+      { r: 205, width: 10.0, intensity: 120 }
+    ]
+  },
+  eccentric_offcenter: {
+    id: 'eccentric_offcenter',
+    title: 'Eccentric Off-Center Loading',
+    specs: 'Origin Offset: Δx=+42, Δy=-30 (Crosshair Alignment)',
+    url: 'sample_gels/benchmark_eccentric_offcenter.png',
+    filename: 'pfsge_eccentric_offcenter.png',
+    center: { x: 256, y: 256 }, // Intentionally starts at visual center so user sees distortion
+    calibratedCenter: { x: 298, y: 226 },
+    threshold: 15,
+    smooth: 2.0,
+    bands: [
+      { r: 58, width: 5.0, intensity: 225 },
+      { r: 118, width: 6.5, intensity: 210 },
+      { r: 176, width: 8.0, intensity: 190 }
+    ]
+  }
+};
+
+let activeBenchmarkSample = null;
+
+// Load and visualize any benchmark test gel in UI
+function loadBenchmarkSample(sampleKey) {
+  const sample = BENCHMARK_SAMPLES[sampleKey] || BENCHMARK_SAMPLES['yeast_3band'];
+  activeBenchmarkSample = sample;
+
+  // Highlight active card
+  document.querySelectorAll('.benchmark-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.sampleId === sample.id);
+  });
+
+  // Set optimal filter defaults for this scenario
+  if (sample.threshold !== undefined) {
+    const el = document.getElementById('filter-threshold');
+    if (el) {
+      el.value = sample.threshold;
+      document.getElementById('val-threshold').textContent = sample.threshold;
+    }
+  }
+  if (sample.smooth !== undefined) {
+    const el = document.getElementById('filter-smooth');
+    if (el) {
+      el.value = sample.smooth;
+      document.getElementById('val-smooth').textContent = parseFloat(sample.smooth).toFixed(1);
+    }
+  }
+
+  // Show / hide eccentric align button
+  const btnWell = document.getElementById('btn-well-align');
+  if (btnWell) {
+    btnWell.style.display = (sample.id === 'eccentric_offcenter') ? 'inline-flex' : 'none';
+  }
+
+  // Update banner
+  const banner = document.getElementById('active-benchmark-banner');
+  if (banner) {
+    banner.style.display = 'flex';
+    document.getElementById('active-benchmark-text').innerHTML = `Active Benchmark: <strong>${sample.title}</strong> — <span style="color:var(--text-secondary);">${sample.specs}</span>`;
+    document.getElementById('active-benchmark-status').textContent = '⚡ Visualized';
+  }
+
+  // Load image
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+
+  img.onload = () => {
+    gelImage = img;
+    centerPoint = { ...sample.center };
+    document.getElementById('gel-canvas-wrapper').style.display = 'flex';
+    document.getElementById('canvas-toolbar').style.display = 'flex';
+    drawGelImage();
+    analyzeGelImageClientSide();
+  };
+
+  img.onerror = () => {
+    // Robust fallback to procedural rendering (e.g., file:/// protocol)
+    console.warn(`Could not load ${sample.url}, rendering procedural synthetic gel.`);
+    loadProceduralBenchmark(sample);
+  };
+
+  img.src = sample.url;
+}
+
+// Procedural in-memory fallback
+function loadProceduralBenchmark(sample) {
+  const size = 512;
   const offCanvas = document.createElement('canvas');
   offCanvas.width = size;
   offCanvas.height = size;
   const ctx = offCanvas.getContext('2d');
 
-  // Dark background with gradient noise
-  ctx.fillStyle = '#05070f';
+  const cx = sample.id === 'eccentric_offcenter' ? 298 : 256;
+  const cy = sample.id === 'eccentric_offcenter' ? 226 : 256;
+
+  // Background
+  ctx.fillStyle = sample.id === 'fluor_noisy' ? '#141824' : '#05070f';
   ctx.fillRect(0, 0, size, size);
 
-  const cx = size / 2;
-  const cy = size / 2;
-
-  // Background radial luminescence
+  // Radial luminescence
   const radGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, size * 0.45);
-  radGrad.addColorStop(0, 'rgba(6, 182, 212, 0.08)');
-  radGrad.addColorStop(0.7, 'rgba(99, 102, 241, 0.04)');
+  radGrad.addColorStop(0, sample.id === 'fluor_noisy' ? 'rgba(6, 182, 212, 0.22)' : 'rgba(6, 182, 212, 0.08)');
+  radGrad.addColorStop(0.7, 'rgba(99, 102, 241, 0.05)');
   radGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = radGrad;
   ctx.fillRect(0, 0, size, size);
 
-  // Spiral track simulation
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+  // Spiral track
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  const cSpiral = 1.2;
+  const cSpiral = 1.45;
   for (let theta = 0; theta < 40 * Math.PI; theta += 0.1) {
-    const r = 12 + cSpiral * theta;
-    if (r > size * 0.45) break;
+    const r = 14 + cSpiral * theta;
+    if (r > size * 0.46) break;
     const x = cx + r * Math.cos(theta);
     const y = cy + r * Math.sin(theta);
     if (theta === 0) ctx.moveTo(x, y);
@@ -179,29 +324,34 @@ function loadBenchmarkGel() {
   }
   ctx.stroke();
 
-  // Draw 3 distinct concentrated DNA bands (concentric rings simulating separated molecular weights)
-  const bands = [
-    { r: 48, width: 7, intensity: 230, color: 'rgba(56, 189, 248, ' }, // 10 Mb fragment
-    { r: 96, width: 9, intensity: 210, color: 'rgba(168, 85, 247, ' }, // 5 Mb fragment
-    { r: 148, width: 11, intensity: 180, color: 'rgba(52, 211, 153, ' } // 1 Mb fragment
-  ];
+  // Central loading well
+  ctx.beginPath();
+  ctx.arc(cx, cy, 9, 0, 2 * Math.PI);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fill();
+  ctx.strokeStyle = '#f8fafc';
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
-  bands.forEach(band => {
+  // DNA bands
+  sample.bands.forEach(band => {
     for (let dr = -band.width; dr <= band.width; dr += 0.5) {
-      const alpha = Math.exp(-(dr * dr) / (band.width * band.width * 0.35));
+      const alpha = Math.exp(-(dr * dr) / (band.width * band.width * 0.4));
       ctx.beginPath();
       ctx.arc(cx, cy, band.r + dr, 0, 2 * Math.PI);
-      ctx.strokeStyle = `${band.color}${alpha * (band.intensity / 255)})`;
+      const intensityNorm = (band.intensity / 255) * alpha;
+      ctx.strokeStyle = `rgba(165, 243, 252, ${intensityNorm})`;
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
   });
 
-  // Add random speckle/noise
+  // Pixel noise
   const imgData = ctx.getImageData(0, 0, size, size);
   const data = imgData.data;
+  const noiseAmp = sample.id === 'fluor_noisy' ? 24 : 8;
   for (let i = 0; i < data.length; i += 4) {
-    const noise = (Math.random() - 0.5) * 12;
+    const noise = (Math.random() - 0.5) * noiseAmp;
     data[i] = Math.min(255, Math.max(0, data[i] + noise));
     data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
     data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
@@ -211,13 +361,29 @@ function loadBenchmarkGel() {
   const img = new Image();
   img.onload = () => {
     gelImage = img;
-    centerPoint = { x: cx, y: cy };
+    centerPoint = { ...sample.center };
     document.getElementById('gel-canvas-wrapper').style.display = 'flex';
     document.getElementById('canvas-toolbar').style.display = 'flex';
     drawGelImage();
     analyzeGelImageClientSide();
   };
   img.src = offCanvas.toDataURL();
+}
+
+// Snap to well origin for eccentric scan
+function alignToPresetWell() {
+  if (activeBenchmarkSample && activeBenchmarkSample.calibratedCenter) {
+    centerPoint = { ...activeBenchmarkSample.calibratedCenter };
+    drawGelImage();
+    analyzeGelImageClientSide();
+    const banner = document.getElementById('active-benchmark-status');
+    if (banner) banner.textContent = '🎯 Aligned to Well (298, 226)';
+  }
+}
+
+// Backward-compatible standard benchmark launcher
+function loadBenchmarkGel() {
+  loadBenchmarkSample('yeast_3band');
 }
 
 function drawGelImage() {
@@ -382,15 +548,20 @@ function analyzeGelImageClientSide() {
     }
   }
 
-  // Densities (normalized)
+  // Densities (normalized) - compute mean fluorescence intensity along concentric circular rings
   const densities = [];
   const binCenters = [];
   let maxDensity = 0;
+  const wellRadius = 14; // exclude central loading well / puncture artifact
 
   for (let i = 0; i < nBins; i++) {
-    const density = binCounts[i] > 0 ? binSums[i] / (binCounts[i] * (i + 1)) : 0; // Area normalized
+    const rCenter = (i + 0.5) * binWidth;
+    let density = 0;
+    if (rCenter > wellRadius && binCounts[i] > 0) {
+      density = binSums[i] / binCounts[i];
+    }
     densities.push(density);
-    binCenters.push(parseFloat(((i + 0.5) * binWidth).toFixed(1)));
+    binCenters.push(parseFloat(rCenter.toFixed(1)));
     if (density > maxDensity) maxDensity = density;
   }
 
@@ -398,8 +569,11 @@ function analyzeGelImageClientSide() {
   const normDensities = maxDensity > 0 ? densities.map(d => (d / maxDensity) * 100) : densities;
   const smoothed = gaussianSmooth(normDensities, sigma);
 
-  // Peak detection
-  const peakIndices = findPeaks(smoothed, 0.08);
+  // Peak detection with 0.05 prominence (filtered within circular gel active matrix)
+  const gelMatrixRadius = Math.min(width, height) * 0.46;
+  const peakIndices = findPeaks(smoothed, 0.05).filter(idx => {
+    return smoothed[idx] > 18 && binCenters[idx] > wellRadius && binCenters[idx] <= gelMatrixRadius;
+  });
   const peakRadii = peakIndices.map(idx => binCenters[idx]);
 
   // Radial variance

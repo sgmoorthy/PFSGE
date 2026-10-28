@@ -37,7 +37,7 @@ The online suite provides instant, client-side sub-millisecond execution and ser
 
 1. **Radial Gel Image Interpreter**
    * Drag-and-drop fluorescence gel scans (PNG, JPG, TIFF, WebP).
-   * **⚡ Load Benchmark Gel**: Instant synthetic spiral gel generator with 3 distinct DNA bands.
+   * **🧪 Benchmark Test Gel Library**: 4 pre-configured synthetic spiral gel scans (Standard 3-Band, Extended 6-Band Megabase, High-Background Autofluorescence, and Eccentric Off-Center Loading) available directly in the UI for instant testing, visualization, and local PNG download.
    * Real-time interactive crosshair dragging for origin alignment at 60 FPS.
    * 1D Gaussian kernel smoothing ($\sigma$ slider), background thresholding, band peak detection, and radial variance ($\sigma^2$) quantification.
    * Direct CSV export of electropherograms.

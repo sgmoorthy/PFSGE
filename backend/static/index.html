@@ -93,13 +93,131 @@
             </div>
           </div>
 
+          <!-- Benchmark Samples Library -->
+          <div class="benchmark-samples-container">
+            <div class="benchmark-samples-header">
+              <div class="samples-title">
+                <span>🧪</span>
+                <strong>Benchmark Test Gel Library</strong>
+                <span class="sample-count-badge">4 Presets Available</span>
+              </div>
+              <span class="samples-hint">Run directly in UI or download to test file uploader</span>
+            </div>
+
+            <div class="benchmark-grid">
+              <!-- Sample 1: Standard 3-Band Ladder -->
+              <div class="benchmark-card" data-sample-id="yeast_3band" id="bcard-yeast_3band">
+                <div class="benchmark-card-top">
+                  <div class="benchmark-thumb-wrap">
+                    <img src="sample_gels/benchmark_yeast_standard_3band.png" alt="Standard 3-Band Ladder">
+                  </div>
+                  <div class="benchmark-info">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:0.25rem;">
+                      <h4 class="benchmark-title">Standard 3-Band</h4>
+                      <span class="badge badge-emerald">High SNR</span>
+                    </div>
+                    <div class="benchmark-specs">10, 5, 1 Mb • Reference standard</div>
+                  </div>
+                </div>
+                <div class="benchmark-actions">
+                  <button class="btn-benchmark-test" onclick="loadBenchmarkSample('yeast_3band')">
+                    ⚡ Run Benchmark
+                  </button>
+                  <a class="btn-benchmark-dl" href="sample_gels/benchmark_yeast_standard_3band.png" download="pfsge_yeast_standard_3band.png" title="Download PNG scan">
+                    📥 PNG
+                  </a>
+                </div>
+              </div>
+
+              <!-- Sample 2: Extended 6-Band Ladder -->
+              <div class="benchmark-card" data-sample-id="megabase_6band" id="bcard-megabase_6band">
+                <div class="benchmark-card-top">
+                  <div class="benchmark-thumb-wrap">
+                    <img src="sample_gels/benchmark_megabase_ladder_6band.png" alt="6-Band Megabase Spectrum">
+                  </div>
+                  <div class="benchmark-info">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:0.25rem;">
+                      <h4 class="benchmark-title">6-Band Megabase</h4>
+                      <span class="badge badge-cyan">6 Bands</span>
+                    </div>
+                    <div class="benchmark-specs">12 to 0.7 Mb • Resolving power</div>
+                  </div>
+                </div>
+                <div class="benchmark-actions">
+                  <button class="btn-benchmark-test" onclick="loadBenchmarkSample('megabase_6band')">
+                    ⚡ Run Benchmark
+                  </button>
+                  <a class="btn-benchmark-dl" href="sample_gels/benchmark_megabase_ladder_6band.png" download="pfsge_megabase_ladder_6band.png" title="Download PNG scan">
+                    📥 PNG
+                  </a>
+                </div>
+              </div>
+
+              <!-- Sample 3: High-Background Noise -->
+              <div class="benchmark-card" data-sample-id="fluor_noisy" id="bcard-fluor_noisy">
+                <div class="benchmark-card-top">
+                  <div class="benchmark-thumb-wrap">
+                    <img src="sample_gels/benchmark_high_noise_fluorescence.png" alt="High-Background Fluorometric Scan">
+                  </div>
+                  <div class="benchmark-info">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:0.25rem;">
+                      <h4 class="benchmark-title">High-Background Fluor</h4>
+                      <span class="badge badge-amber">Filter Test</span>
+                    </div>
+                    <div class="benchmark-specs">Matrix flare & noise • SNR ~12 dB</div>
+                  </div>
+                </div>
+                <div class="benchmark-actions">
+                  <button class="btn-benchmark-test" onclick="loadBenchmarkSample('fluor_noisy')">
+                    ⚡ Run Benchmark
+                  </button>
+                  <a class="btn-benchmark-dl" href="sample_gels/benchmark_high_noise_fluorescence.png" download="pfsge_high_noise_fluorescence.png" title="Download PNG scan">
+                    📥 PNG
+                  </a>
+                </div>
+              </div>
+
+              <!-- Sample 4: Eccentric Off-Center Loading -->
+              <div class="benchmark-card" data-sample-id="eccentric_offcenter" id="bcard-eccentric_offcenter">
+                <div class="benchmark-card-top">
+                  <div class="benchmark-thumb-wrap">
+                    <img src="sample_gels/benchmark_eccentric_offcenter.png" alt="Eccentric Off-Center Loading">
+                  </div>
+                  <div class="benchmark-info">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:0.25rem;">
+                      <h4 class="benchmark-title">Off-Center Origin</h4>
+                      <span class="badge badge-rose">Crosshair Test</span>
+                    </div>
+                    <div class="benchmark-specs">Δx=+42, Δy=-30 • Align crosshair</div>
+                  </div>
+                </div>
+                <div class="benchmark-actions">
+                  <button class="btn-benchmark-test" onclick="loadBenchmarkSample('eccentric_offcenter')">
+                    ⚡ Run Benchmark
+                  </button>
+                  <a class="btn-benchmark-dl" href="sample_gels/benchmark_eccentric_offcenter.png" download="pfsge_eccentric_offcenter.png" title="Download PNG scan">
+                    📥 PNG
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div id="gel-canvas-wrapper" class="canvas-wrapper" style="display:none; margin-top:1.25rem;">
             <canvas id="gel-canvas" class="interactive-stage"></canvas>
           </div>
 
           <div class="canvas-toolbar" id="canvas-toolbar" style="display:none;">
-            <span>Drag the <strong style="color:var(--accent-rose);">red crosshair</strong> to align the spiral center</span>
-            <button class="btn btn-secondary btn-sm" onclick="resetGelCenter()">Auto-Center</button>
+            <span id="canvas-status-hint">Drag the <strong style="color:var(--accent-rose);">red crosshair</strong> to align the spiral center</span>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <button class="btn btn-secondary btn-sm" id="btn-well-align" style="display:none;" onclick="alignToPresetWell()">🎯 Snap to Well (298, 226)</button>
+              <button class="btn btn-secondary btn-sm" onclick="resetGelCenter()">Auto-Center</button>
+            </div>
+          </div>
+
+          <div class="active-benchmark-banner" id="active-benchmark-banner" style="display:none;">
+            <span id="active-benchmark-text">Active Scan: Standard 3-Band Ladder</span>
+            <span id="active-benchmark-status" style="font-weight:600; color:var(--accent-cyan);">Ready</span>
           </div>
 
           <div style="margin-top:1.25rem; display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
@@ -477,6 +595,6 @@
     </footer>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2.2"></script>
 </body>
 </html>
